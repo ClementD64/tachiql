@@ -1,0 +1,127 @@
+scalar Int64
+
+type Query {
+  # @ProtoNumber(1) val backupManga: List<BackupManga>
+  mangas(status: Int, source: Int64): [Manga!]!
+  manga(title: String, source: Int64, url: String): Manga
+  # @ProtoNumber(2) var backupCategories: List<BackupCategory> =
+  categories: [Category!]
+  # @ProtoNumber(101) var backupSources: List<BackupSource> =
+  sources: [Source!]
+}
+
+type Category {
+  # @ProtoNumber(1) var name: String
+  name: String!
+  # @ProtoNumber(2) var order: Int =
+  order: Int
+  # @ProtoNumber(100) var flags: Int =
+  flags: Int
+}
+
+type Chapter {
+  # @ProtoNumber(1) var url: String
+  url: String!
+  # @ProtoNumber(2) var name: String
+  name: String!
+  # @ProtoNumber(3) var scanlator: String?
+  scanlator: String
+  # @ProtoNumber(4) var read: Boolean =
+  read: Boolean
+  # @ProtoNumber(5) var bookmark: Boolean =
+  bookmark: Boolean
+  # @ProtoNumber(6) var lastPageRead: Int =
+  lastPageRead: Int
+  # @ProtoNumber(7) var dateFetch: Long =
+  dateFetch: Int64
+  # @ProtoNumber(8) var dateUpload: Long =
+  dateUpload: Int64
+  # @ProtoNumber(9) var chapterNumber: Float =
+  chapterNumber: Float
+  # @ProtoNumber(10) var sourceOrder: Int =
+  sourceOrder: Int
+}
+
+type History {
+  # @ProtoNumber(1) var url: String
+  url: String!
+  # @ProtoNumber(2) var lastRead: Long
+  lastRead: Int64!
+}
+
+type Manga {
+  # @ProtoNumber(1) var source: Long
+  source: Int64!
+  # @ProtoNumber(2) var url: String
+  url: String!
+  # @ProtoNumber(3) var title: String =
+  title: String
+  # @ProtoNumber(4) var artist: String?
+  artist: String
+  # @ProtoNumber(5) var author: String?
+  author: String
+  # @ProtoNumber(6) var description: String?
+  description: String
+  # @ProtoNumber(7) var genre: List<String> =
+  genre: [String!]
+  # @ProtoNumber(8) var status: Int =
+  status: Int
+  # @ProtoNumber(9) var thumbnailUrl: String?
+  thumbnailUrl: String
+  # @ProtoNumber(13) var dateAdded: Long =
+  dateAdded: Int64
+  # @ProtoNumber(14) var viewer: Int =
+  viewer: Int
+  # @ProtoNumber(16) var chapters: List<BackupChapter> =
+  chapters: [Chapter!]
+  # @ProtoNumber(17) var categories: List<Int> =
+  categories: [Int!]
+  # @ProtoNumber(18) var tracking: List<BackupTracking> =
+  tracking: [Tracking!]
+  # @ProtoNumber(100) var favorite: Boolean =
+  favorite: Boolean
+  # @ProtoNumber(101) var chapterFlags: Int =
+  chapterFlags: Int
+  # @ProtoNumber(103) var viewer_flags: Int?
+  viewer_flags: Int
+  # @ProtoNumber(104) var history: List<BackupHistory> =
+  history: [History!]
+  # cached thumbnail url
+  thumbnail: String
+  # chapters count
+  totalChapters: Int!
+  # read chapters count
+  readChapters: Int!
+}
+
+type Source {
+  # @ProtoNumber(1) var name: String =
+  name: String
+  # @ProtoNumber(2) var sourceId: Long
+  sourceId: Int64!
+}
+
+type Tracking {
+  # @ProtoNumber(1) var syncId: Int
+  syncId: Int!
+  # @ProtoNumber(2) var libraryId: Long
+  libraryId: Int64!
+  # @ProtoNumber(3) var mediaId: Int =
+  mediaId: Int
+  # @ProtoNumber(4) var trackingUrl: String =
+  trackingUrl: String
+  # @ProtoNumber(5) var title: String =
+  title: String
+  # @ProtoNumber(6) var lastChapterRead: Float =
+  lastChapterRead: Float
+  # @ProtoNumber(7) var totalChapters: Int =
+  totalChapters: Int
+  # @ProtoNumber(8) var score: Float =
+  score: Float
+  # @ProtoNumber(9) var status: Int =
+  status: Int
+  # @ProtoNumber(10) var startedReadingDate: Long =
+  startedReadingDate: Int64
+  # @ProtoNumber(11) var finishedReadingDate: Long =
+  finishedReadingDate: Int64
+}
