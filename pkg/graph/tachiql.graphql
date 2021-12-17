@@ -92,6 +92,7 @@ type Manga {
   totalChapters: Int!
   # read chapters count
   readChapters: Int!
+  state: Int!
 }
 
 type Source {

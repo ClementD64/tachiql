@@ -6,6 +6,8 @@ package graph
 import (
 	"context"
 	"errors"
+	"sort"
+	"time"
 
 	"github.com/clementd64/tachiql/pkg/backup"
 	"github.com/clementd64/tachiql/pkg/graph/generated"
@@ -31,6 +33,49 @@ func (r *mangaResolver) ReadChapters(ctx context.Context, obj *backup.Manga) (in
 		}
 	}
 	return read, nil
+}
+
+func (r *mangaResolver) State(ctx context.Context, obj *backup.Manga) (int32, error) {
+	MAX_HISTORY := time.Now().Add(-time.Hour * 24 * 16).UnixMilli()
+	MAX_CHAPTER := time.Now().Add(-time.Hour * 24 * 21).UnixMilli()
+
+	read, _ := r.ReadChapters(ctx, obj)
+	if read == 0 {
+		return int32(0), nil
+	}
+
+	if read != int32(len(obj.Chapters)) {
+		var lastRead int64 = 0
+		for _, history := range obj.History {
+			if *history.LastRead > lastRead {
+				lastRead = *history.LastRead
+			}
+		}
+
+		if lastRead != 0 && lastRead > MAX_HISTORY {
+			return int32(1), nil
+		}
+
+		chapter := []*backup.Chapter{}
+		copy(chapter, obj.Chapters)
+
+		sort.Slice(chapter, func(i, j int) bool { return *chapter[i].DateFetch > *chapter[j].DateFetch })
+
+		if len(chapter) >= 3 {
+			ch1, ch2 := chapter[0], chapter[2]
+			if !*ch1.Read && *ch2.Read && *ch1.DateFetch > MAX_CHAPTER && *ch2.DateFetch <= MAX_CHAPTER {
+				return int32(1), nil
+			}
+		}
+
+		return int32(2), nil
+	}
+
+	if *obj.Status == 2 {
+		return int32(4), nil
+	}
+
+	return int32(3), nil
 }
 
 func (r *queryResolver) Mangas(ctx context.Context, status *int32, source *int64) ([]*backup.Manga, error) {

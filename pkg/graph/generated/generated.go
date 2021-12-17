@@ -82,6 +82,7 @@ type ComplexityRoot struct {
 		History       func(childComplexity int) int
 		ReadChapters  func(childComplexity int) int
 		Source        func(childComplexity int) int
+		State         func(childComplexity int) int
 		Status        func(childComplexity int) int
 		Thumbnail     func(childComplexity int) int
 		ThumbnailUrl  func(childComplexity int) int
@@ -127,6 +128,7 @@ type MangaResolver interface {
 	Thumbnail(ctx context.Context, obj *backup.Manga) (*string, error)
 	TotalChapters(ctx context.Context, obj *backup.Manga) (int32, error)
 	ReadChapters(ctx context.Context, obj *backup.Manga) (int32, error)
+	State(ctx context.Context, obj *backup.Manga) (int32, error)
 }
 type QueryResolver interface {
 	Mangas(ctx context.Context, status *int32, source *int64) ([]*backup.Manga, error)
@@ -343,6 +345,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Manga.Source(childComplexity), true
+
+	case "Manga.state":
+		if e.complexity.Manga.State == nil {
+			break
+		}
+
+		return e.complexity.Manga.State(childComplexity), true
 
 	case "Manga.status":
 		if e.complexity.Manga.Status == nil {
@@ -680,6 +689,7 @@ type Manga {
   totalChapters: Int!
   # read chapters count
   readChapters: Int!
+  state: Int!
 }
 
 type Source {
@@ -1994,6 +2004,41 @@ func (ec *executionContext) _Manga_readChapters(ctx context.Context, field graph
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Manga().ReadChapters(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int32)
+	fc.Result = res
+	return ec.marshalNInt2int32(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Manga_state(ctx context.Context, field graphql.CollectedField, obj *backup.Manga) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Manga",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Manga().State(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3988,6 +4033,20 @@ func (ec *executionContext) _Manga(ctx context.Context, sel ast.SelectionSet, ob
 					}
 				}()
 				res = ec._Manga_readChapters(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "state":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Manga_state(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
