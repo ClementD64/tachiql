@@ -25,6 +25,7 @@ func New(g *graph.Graph, plugins Plugins) *Tachiql {
 		context:    ctx,
 		StopWorker: cancel,
 	}
+
 	t.plugins.Schema(g)
 	return t
 }
@@ -35,6 +36,7 @@ func (t *Tachiql) SetBackup(b *backup.Backup) error {
 	}
 
 	t.Backup = b
+	t.plugins.Clean()
 	return nil
 }
 

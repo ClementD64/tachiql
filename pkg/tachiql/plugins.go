@@ -14,6 +14,7 @@ import (
 type Plugin struct {
 	Schema func(*graph.Graph) error             `plugin:""`
 	Backup func(*Tachiql, *backup.Backup) error `plugin:""`
+	Clean  func()                               `plugin:""`
 	Worker func(context.Context, *Tachiql)      `plugin:""`
 }
 
@@ -47,6 +48,12 @@ func (p *Plugins) Backup(t *Tachiql, b *backup.Backup) error {
 		}
 	}
 	return nil
+}
+
+func (p *Plugins) Clean() {
+	for _, plugin := range *p {
+		plugin.Clean()
+	}
 }
 
 func (p *Plugins) Worker(ctx context.Context, t *Tachiql) {
