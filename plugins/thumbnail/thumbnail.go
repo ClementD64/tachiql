@@ -181,11 +181,11 @@ func (t *Thumbnail) Clean() {
 	t.rollupFiles = nil
 }
 
-func (t *Thumbnail) Worker(ctx context.Context, tachiql *tachiql.Tachiql) {
+func (t *Thumbnail) Worker(ctx context.Context, tachiql *tachiql.Tachiql) error {
 	for {
 		select {
 		case <-ctx.Done():
-			return
+			return nil
 		case <-time.After(24 * time.Hour):
 			t.files, _ = t.DownloadThumbnails(tachiql.Backup.Mangas, false)
 		}

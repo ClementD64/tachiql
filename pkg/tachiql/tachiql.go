@@ -41,6 +41,6 @@ func (t *Tachiql) SetBackup(b *backup.Backup) error {
 }
 
 func (t *Tachiql) StartWorker() error {
-	t.plugins.Worker(t.context, t)
+	t.plugins.Worker(t.context, t.StopWorker, t)
 	return nil
 }

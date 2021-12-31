@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"reflect"
 	"sync"
 
@@ -12,10 +13,10 @@ import (
 )
 
 type Plugin struct {
-	Schema func(*graph.Graph) error             `plugin:""`
-	Backup func(*Tachiql, *backup.Backup) error `plugin:""`
-	Clean  func()                               `plugin:""`
-	Worker func(context.Context, *Tachiql)      `plugin:""`
+	Schema func(*graph.Graph) error              `plugin:""`
+	Backup func(*Tachiql, *backup.Backup) error  `plugin:""`
+	Clean  func()                                `plugin:""`
+	Worker func(context.Context, *Tachiql) error `plugin:""`
 }
 
 func WrapPlugins(plugins []interface{}) (Plugins, error) {
@@ -56,13 +57,16 @@ func (p *Plugins) Clean() {
 	}
 }
 
-func (p *Plugins) Worker(ctx context.Context, t *Tachiql) {
+func (p *Plugins) Worker(ctx context.Context, cancel context.CancelFunc, t *Tachiql) {
 	wg := sync.WaitGroup{}
 	for _, plugin := range *p {
 		wg.Add(1)
 		go func(plugin Plugin) {
 			defer wg.Done()
-			plugin.Worker(ctx, t)
+			if err := plugin.Worker(ctx, t); err != nil {
+				log.Print(err)
+				cancel()
+			}
 		}(plugin)
 	}
 	wg.Wait()
