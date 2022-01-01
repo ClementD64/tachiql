@@ -27,6 +27,8 @@ func (w *Watch) Worker(ctx context.Context, g *graph.Graph) error {
 
 	for {
 		select {
+		case <-ctx.Done():
+			return nil
 		case _, ok := <-watcher.Events:
 			if !ok {
 				continue

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"reflect"
 	"sync"
 )
@@ -54,19 +53,21 @@ func (p *Plugins) Clean() {
 	}
 }
 
-func (p *Plugins) Worker(ctx context.Context, cancel context.CancelFunc, t *Graph) {
+func (p *Plugins) Worker(ctx context.Context, cancel context.CancelFunc, t *Graph) error {
 	wg := sync.WaitGroup{}
+	var err error
 	for _, plugin := range *p {
 		wg.Add(1)
 		go func(plugin Plugin) {
 			defer wg.Done()
-			if err := plugin.Worker(ctx, t); err != nil {
-				log.Print(err)
+			if e := plugin.Worker(ctx, t); e != nil {
+				err = e
 				cancel()
 			}
 		}(plugin)
 	}
 	wg.Wait()
+	return err
 }
 
 func WrapPlugin(plugin interface{}, wrapper interface{}) error {

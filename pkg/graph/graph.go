@@ -47,6 +47,5 @@ func (t *Graph) SetRoot(root interface{}) error {
 }
 
 func (t *Graph) StartWorker() error {
-	t.plugins.Worker(t.context, t.StopWorker, t)
-	return nil
+	return t.plugins.Worker(t.context, t.StopWorker, t)
 }
