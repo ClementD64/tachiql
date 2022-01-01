@@ -18,7 +18,6 @@ import (
 
 	"github.com/clementd64/tachiql/pkg/backup"
 	"github.com/clementd64/tachiql/pkg/graph"
-	"github.com/clementd64/tachiql/pkg/tachiql"
 	"github.com/graphql-go/graphql"
 )
 
@@ -165,8 +164,8 @@ func (t *Thumbnail) Schema(g *graph.Graph) error {
 	return nil
 }
 
-func (t *Thumbnail) Backup(_ *tachiql.Tachiql, b *backup.Backup) error {
-	files, err := t.DownloadThumbnails(b.Mangas, true)
+func (t *Thumbnail) Root(_ *graph.Graph, b interface{}) error {
+	files, err := t.DownloadThumbnails(b.(*backup.Backup).Mangas, true)
 	if err != nil {
 		return err
 	}
@@ -181,13 +180,13 @@ func (t *Thumbnail) Clean() {
 	t.rollupFiles = nil
 }
 
-func (t *Thumbnail) Worker(ctx context.Context, tachiql *tachiql.Tachiql) error {
+func (t *Thumbnail) Worker(ctx context.Context, g *graph.Graph) error {
 	for {
 		select {
 		case <-ctx.Done():
 			return nil
 		case <-time.After(24 * time.Hour):
-			t.files, _ = t.DownloadThumbnails(tachiql.Backup.Mangas, false)
+			t.files, _ = t.DownloadThumbnails(g.Root.(*backup.Backup).Mangas, false)
 		}
 	}
 }

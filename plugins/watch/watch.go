@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/clementd64/tachiql/pkg/backup"
-	"github.com/clementd64/tachiql/pkg/tachiql"
+	"github.com/clementd64/tachiql/pkg/graph"
 	"github.com/fsnotify/fsnotify"
 )
 
@@ -13,7 +13,7 @@ type Watch struct {
 	Dir string
 }
 
-func (w *Watch) Worker(ctx context.Context, t *tachiql.Tachiql) error {
+func (w *Watch) Worker(ctx context.Context, g *graph.Graph) error {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		return err
@@ -35,7 +35,7 @@ func (w *Watch) Worker(ctx context.Context, t *tachiql.Tachiql) error {
 			if err != nil {
 				log.Print(err)
 			} else {
-				t.SetBackup(b)
+				g.SetRoot(b)
 			}
 		case err, ok := <-watcher.Errors:
 			if !ok {

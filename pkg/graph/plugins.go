@@ -1,4 +1,4 @@
-package tachiql
+package graph
 
 import (
 	"context"
@@ -7,16 +7,13 @@ import (
 	"log"
 	"reflect"
 	"sync"
-
-	"github.com/clementd64/tachiql/pkg/backup"
-	"github.com/clementd64/tachiql/pkg/graph"
 )
 
 type Plugin struct {
-	Schema func(*graph.Graph) error              `plugin:""`
-	Backup func(*Tachiql, *backup.Backup) error  `plugin:""`
-	Clean  func()                                `plugin:""`
-	Worker func(context.Context, *Tachiql) error `plugin:""`
+	Schema func(*Graph) error                  `plugin:""`
+	Root   func(*Graph, interface{}) error     `plugin:""`
+	Clean  func()                              `plugin:""`
+	Worker func(context.Context, *Graph) error `plugin:""`
 }
 
 func WrapPlugins(plugins []interface{}) (Plugins, error) {
@@ -33,7 +30,7 @@ func WrapPlugins(plugins []interface{}) (Plugins, error) {
 
 type Plugins []Plugin
 
-func (p *Plugins) Schema(g *graph.Graph) error {
+func (p *Plugins) Schema(g *Graph) error {
 	for _, plugin := range *p {
 		if err := plugin.Schema(g); err != nil {
 			return err
@@ -42,9 +39,9 @@ func (p *Plugins) Schema(g *graph.Graph) error {
 	return nil
 }
 
-func (p *Plugins) Backup(t *Tachiql, b *backup.Backup) error {
+func (p *Plugins) Root(t *Graph, root interface{}) error {
 	for _, plugin := range *p {
-		if err := plugin.Backup(t, b); err != nil {
+		if err := plugin.Root(t, root); err != nil {
 			return err
 		}
 	}
@@ -57,7 +54,7 @@ func (p *Plugins) Clean() {
 	}
 }
 
-func (p *Plugins) Worker(ctx context.Context, cancel context.CancelFunc, t *Tachiql) {
+func (p *Plugins) Worker(ctx context.Context, cancel context.CancelFunc, t *Graph) {
 	wg := sync.WaitGroup{}
 	for _, plugin := range *p {
 		wg.Add(1)

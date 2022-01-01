@@ -9,18 +9,19 @@ import (
 	"github.com/graphql-go/graphql"
 )
 
-type Graph struct {
-	Types  map[string]*graphql.Object
-	Schema graphql.Schema
+type graphGenerator struct {
+	Types map[string]*graphql.Object
 }
 
-func New(obj interface{}) (g Graph, err error) {
-	g.Types = map[string]*graphql.Object{}
-	g.Schema, err = g.genSchema(obj)
-	return
+func BuildGraph(obj interface{}) (graphql.Schema, map[string]*graphql.Object, error) {
+	generator := &graphGenerator{
+		Types: map[string]*graphql.Object{},
+	}
+	schema, err := generator.genSchema(obj)
+	return schema, generator.Types, err
 }
 
-func (g *Graph) genSchema(obj interface{}) (graphql.Schema, error) {
+func (g *graphGenerator) genSchema(obj interface{}) (graphql.Schema, error) {
 	t := reflect.TypeOf(obj)
 	if t.Kind() == reflect.Ptr {
 		t = t.Elem()
@@ -35,7 +36,7 @@ func (g *Graph) genSchema(obj interface{}) (graphql.Schema, error) {
 	})
 }
 
-func (g *Graph) gen(t reflect.Type) graphql.Type {
+func (g *graphGenerator) gen(t reflect.Type) graphql.Type {
 	switch t.Kind() {
 	case reflect.Ptr:
 		return g.gen(t.Elem())
@@ -61,7 +62,7 @@ func (g *Graph) gen(t reflect.Type) graphql.Type {
 	}
 }
 
-func (g *Graph) genStruct(t reflect.Type) graphql.Type {
+func (g *graphGenerator) genStruct(t reflect.Type) graphql.Type {
 	fields := g.genStructFields(t)
 
 	obj := graphql.NewObject(graphql.ObjectConfig{
@@ -73,7 +74,7 @@ func (g *Graph) genStruct(t reflect.Type) graphql.Type {
 	return obj
 }
 
-func (g *Graph) genStructFields(t reflect.Type) graphql.Fields {
+func (g *graphGenerator) genStructFields(t reflect.Type) graphql.Fields {
 	fields := graphql.Fields{}
 
 	for i := 0; i < t.NumField(); i++ {
