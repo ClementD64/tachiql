@@ -3,7 +3,9 @@ package server
 import (
 	"context"
 	"log"
+	"net"
 	"net/http"
+	"net/http/fcgi"
 	"time"
 
 	"github.com/clementd64/tachiql/pkg/graph"
@@ -16,6 +18,7 @@ type Server struct {
 	ShutdownTimeout         time.Duration
 	ShutdownTimeoutExceeded func(err error)
 	ServeMux                *http.ServeMux
+	FastCGI                 bool
 }
 
 func (s *Server) Worker(ctx context.Context, t *graph.Graph) error {
@@ -48,6 +51,14 @@ func (s *Server) Worker(ctx context.Context, t *graph.Graph) error {
 		},
 	}))
 
+	if s.FastCGI {
+		return s.serveFcgi(ctx)
+	}
+
+	return s.serveHTTP(ctx)
+}
+
+func (s *Server) serveHTTP(ctx context.Context) error {
 	srv := &http.Server{
 		Addr:    s.Addr,
 		Handler: s.ServeMux,
@@ -66,4 +77,18 @@ func (s *Server) Worker(ctx context.Context, t *graph.Graph) error {
 		return err
 	}
 	return nil
+}
+
+func (s *Server) serveFcgi(ctx context.Context) error {
+	l, err := net.Listen("tcp", s.Addr)
+	if err != nil {
+		return err
+	}
+
+	go func() {
+		<-ctx.Done()
+		l.Close()
+	}()
+
+	return fcgi.Serve(l, s.ServeMux)
 }
